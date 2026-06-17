@@ -2,21 +2,23 @@
 
 #include <sdbusplus/async/context.hpp>
 
-namespace concurrent_maintenance {
+namespace concurrent_maintenance
+{
 
-class Manager {
-public:
-  explicit Manager(sdbusplus::async::context &ctx);
+class Manager
+{
+  public:
+    explicit Manager(sdbusplus::async::context& ctx);
 
-  Manager(const Manager &) = delete;
-  Manager &operator=(const Manager &) = delete;
-  Manager(Manager &&) = delete;
-  Manager &operator=(Manager &&) = delete;
+    Manager(const Manager&) = delete;
+    Manager& operator=(const Manager&) = delete;
+    Manager(Manager&&) = delete;
+    Manager& operator=(Manager&&) = delete;
 
-  ~Manager() = default;
+    ~Manager() = default;
 
-private:
-  sdbusplus::async::context &ctx;
+  private:
+    sdbusplus::async::context& ctx;
 };
 
 } // namespace concurrent_maintenance

@@ -2,10 +2,12 @@
 
 #include <phosphor-logging/lg2.hpp>
 
-namespace concurrent_maintenance {
+namespace concurrent_maintenance
+{
 
-Manager::Manager(sdbusplus::async::context &ctx) : ctx(ctx) {
-  lg2::info("Concurrent Maintenance manager initialized");
+Manager::Manager(sdbusplus::async::context& ctx) : ctx(ctx)
+{
+    lg2::info("Concurrent Maintenance manager initialized");
 }
 
 } // namespace concurrent_maintenance
