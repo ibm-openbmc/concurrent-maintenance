@@ -1,0 +1,11 @@
+[Unit]
+Description=Concurrent Maintenance Service
+
+[Service]
+Type=dbus
+BusName=com.ibm.ConcurrentMaintenance
+ExecStart=/usr/bin/ibm-concurrent-maintenance
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
