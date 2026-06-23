@@ -28,3 +28,7 @@ install_data(
     'service_files/com.ibm.ConcurrentMaintenance.service',
     install_dir: systemd_system_unit_dir,
 )
+
+if get_option('tests').enabled()
+    subdir('test')
+endif
