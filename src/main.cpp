@@ -3,16 +3,17 @@
 #include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/async/context.hpp>
 
-int main() {
-  sdbusplus::async::context ctx;
+int main()
+{
+    sdbusplus::async::context ctx;
 
-  ctx.request_name("com.ibm.ConcurrentMaintenance");
+    ctx.request_name("com.ibm.ConcurrentMaintenance");
 
-  concurrent_maintenance::Manager manager(ctx);
+    concurrent_maintenance::Manager manager(ctx);
 
-  lg2::info("Concurrent Maintenance service started");
+    lg2::info("Concurrent Maintenance service started");
 
-  ctx.run();
+    ctx.run();
 
-  return 0;
+    return 0;
 }
