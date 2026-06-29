@@ -1,0 +1,2 @@
+# Concurrent Maintenance daemon options
+option('tests', type: 'feature', value: 'disabled', description: 'Build tests')
