@@ -40,6 +40,8 @@ class Manager
 
     // Allow unit tests to access private members
     friend class ManagerTest;
+    
+    sdbusplus::async::task<> deleteCMObject();
 };
 
 } // namespace concurrent_maintenance

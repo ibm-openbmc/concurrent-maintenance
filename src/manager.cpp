@@ -92,10 +92,16 @@ void Manager::manageCMObject(bool readyToRemove)
     const std::string path = readyToRemove ? cmRemoveObjectPath
                                            : cmAddObjectPath;
 
+
     lg2::info("Creating CM object at {PATH}", "PATH", path);
     currentCMObject = std::make_unique<CMObject>(ctx, path);
     lg2::info("CM object created at {PATH}", "PATH",
               currentCMObject->getPath());
+
+    currentCMObject = std::make_unique<CMObject>(
+        ctx, path, [this]() { ctx.spawn(deleteCMObject()); });
+    currentCMObject->updateStatus(OperationStatus::InProgress);
+
 }
 
 } // namespace concurrent_maintenance
