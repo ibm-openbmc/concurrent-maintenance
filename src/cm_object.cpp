@@ -18,10 +18,20 @@ namespace concurrent_maintenance
 
 CMObject::CMObject(sdbusplus::async::context& ctx,
                    const std::string& objectPath, const std::string& fruPath) :
+    sdbusplus::async::server_t<CMObject, AssocDefsAServer>(ctx,
+                                                           objectPath.c_str()),
     ctx(ctx), objectPath(objectPath), fruPath(fruPath)
 {
-    lg2::info("CM object created at {PATH} for FRU {FRUPATH}", "PATH",
-              objectPath, "FRUPATH", fruPath);
+    // Association:
+    // "inventory"  — from the CM object, the endpoint is an inventory item
+    // "cm_object"  — from the inventory item, what points at it is a cm_object
+    this->associations({{"inventory", "cm_object", fruPath}});
+
+    this->emit_added();
+
+    lg2::info(
+        "CM object created at {PATH} with association to inventory {INV_PATH}",
+        "PATH", objectPath, "INV_PATH", fruPath);
 }
 
 sdbusplus::async::task<> CMObject::execute(bool isRemove,
