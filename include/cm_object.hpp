@@ -9,7 +9,9 @@
 #include <sdbusplus/async/server.hpp>
 #include <sdbusplus/async/task.hpp>
 #include <xyz/openbmc_project/Common/Progress/aserver.hpp>
+#include <xyz/openbmc_project/Common/Progress/common.hpp>
 
+#include <functional>
 #include <string>
 
 namespace concurrent_maintenance
@@ -50,6 +52,8 @@ class CMObject : public sdbusplus::async::server_t<CMObject, ProgressAServer>
 
     CMObject(const CMObject&) = delete;
     CMObject& operator=(const CMObject&) = delete;
+    CMObject(CMObject&&) = delete;
+    CMObject& operator=(CMObject&&) = delete;
 
     ~CMObject() = default;
 
@@ -76,7 +80,8 @@ class CMObject : public sdbusplus::async::server_t<CMObject, ProgressAServer>
      *                  Never null — Manager validates before constructing
      *                  CMObject.
      */
-    sdbusplus::async::task<> execute(bool isRemove, const FRUOperations& ops);
+    sdbusplus::async::task<>
+        execute(bool isRemove, std::reference_wrapper<const FRUOperations> ops);
 
     /**
      * @brief Update the Progress interface status on D-Bus.

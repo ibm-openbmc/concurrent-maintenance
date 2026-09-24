@@ -7,13 +7,18 @@
 #include "fru_identifier.hpp"
 
 #include <phosphor-logging/lg2.hpp>
+#include <sdbusplus/async/context.hpp>
 #include <sdbusplus/async/match.hpp>
+#include <sdbusplus/async/task.hpp>
 #include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/message.hpp>
 #include <xyz/openbmc_project/ObjectMapper/client.hpp>
 
+#include <exception>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 

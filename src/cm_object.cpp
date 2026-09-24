@@ -3,11 +3,14 @@
 
 #include "cm_object.hpp"
 
+#include "fru_identifier.hpp"
 #include "utils.hpp"
 
 #include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/async/context.hpp>
+#include <sdbusplus/async/server.hpp>
 #include <sdbusplus/async/task.hpp>
+#include <xyz/openbmc_project/Common/Progress/common.hpp>
 
 #include <exception>
 #include <functional>
@@ -30,8 +33,9 @@ CMObject::CMObject(sdbusplus::async::context& ctx,
     this->emit_added();
 }
 
-sdbusplus::async::task<> CMObject::execute(bool isRemove,
-                                           const FRUOperations& ops)
+sdbusplus::async::task<>
+    CMObject::execute(bool isRemove,
+                      std::reference_wrapper<const FRUOperations> ops)
 {
     updateStatus(OperationStatus::InProgress);
 
@@ -40,12 +44,12 @@ sdbusplus::async::task<> CMObject::execute(bool isRemove,
         if (isRemove)
         {
             lg2::info("CM object: starting remove for {PATH}", "PATH", fruPath);
-            co_await ops.remove(std::ref(ctx), fruPath, std::ref(*this));
+            co_await ops.get().remove(std::ref(ctx), fruPath, std::ref(*this));
         }
         else
         {
             lg2::info("CM object: starting add for {PATH}", "PATH", fruPath);
-            co_await ops.add(std::ref(ctx), fruPath, std::ref(*this));
+            co_await ops.get().add(std::ref(ctx), fruPath, std::ref(*this));
         }
         lg2::info("CM object: sequence completed for {PATH}", "PATH", fruPath);
         updateStatus(OperationStatus::Completed);
