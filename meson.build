@@ -42,3 +42,15 @@ install_data(
 if get_option('tests').enabled()
     subdir('test')
 endif
+
+# clang-tidy
+run_target(
+    'clang-tidy',
+    command: [
+        'run-clang-tidy',
+        '-p',
+        meson.project_build_root(),
+        meson.project_source_root() + '/src',
+        meson.project_source_root() + '/include',
+    ],
+)
