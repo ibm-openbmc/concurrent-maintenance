@@ -26,13 +26,10 @@ bool hasInterface(const std::vector<std::string>& interfaces,
 bool matchBmcCard(const std::vector<std::string>& interfaces,
                   const std::string& /*fruPath*/)
 {
-    return hasInterface(interfaces, "xyz.openbmc_project.Inventory.Item.Board");
-}
-
-bool matchFsiCard(const std::vector<std::string>& interfaces,
-                  const std::string& /*fruPath*/)
-{
-    return hasInterface(interfaces, "xyz.openbmc_project.Inventory.Item.Board");
+    return hasInterface(interfaces,
+                        "xyz.openbmc_project.Inventory.Item.Board") &&
+           hasInterface(interfaces,
+                        "xyz.openbmc_project.Common.PhysicalContext");
 }
 
 bool matchSwitchboard(const std::vector<std::string>& interfaces,
@@ -42,10 +39,16 @@ bool matchSwitchboard(const std::vector<std::string>& interfaces,
                         "xyz.openbmc_project.Inventory.Item.Board.Motherboard");
 }
 
+bool matchFsiCard(const std::vector<std::string>& interfaces,
+                  const std::string& /*fruPath*/)
+{
+    return hasInterface(interfaces, "xyz.openbmc_project.Inventory.Item.Board");
+}
+
 constexpr std::array<FRUEntry, 3> handlerTable = {{
     {matchBmcCard, {bmcRemove, bmcAdd}},
-    {matchFsiCard, {fsiCardRemove, fsiCardAdd}},
     {matchSwitchboard, {switchboardRemove, switchboardAdd}},
+    {matchFsiCard, {fsiCardRemove, fsiCardAdd}},
 }};
 
 } // namespace

@@ -37,6 +37,7 @@ static const std::vector<std::string> fsiInterfaces = {
 static const std::vector<std::string> bmcInterfaces = {
     "xyz.openbmc_project.Inventory.Item",
     "xyz.openbmc_project.Inventory.Item.Board",
+    "xyz.openbmc_project.Common.PhysicalContext",
     "xyz.openbmc_project.State.ReadyToRemove",
 };
 static const std::vector<std::string> switchboardInterfaces = {

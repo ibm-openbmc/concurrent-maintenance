@@ -129,6 +129,8 @@ sdbusplus::async::task<> Manager::processCMRequest(bool readyToRemove,
     const std::string cmPath = readyToRemove ? cmRemoveObjectPath
                                              : cmAddObjectPath;
 
+    currentCMObject.reset();
+
     currentCMObject = std::make_unique<CMObject>(ctx, cmPath, fruPath);
 
     try
