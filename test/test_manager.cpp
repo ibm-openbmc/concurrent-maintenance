@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: Copyright IBM Corp.
 
 #include <sdbusplus/async.hpp>
+#include <sdbusplus/async/stdexec/__detail/__just.hpp>
+#include <sdbusplus/async/stdexec/__detail/__then.hpp>
 
 #include <gtest/gtest.h>
 
