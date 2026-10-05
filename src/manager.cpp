@@ -5,6 +5,7 @@
 
 #include "cm_object.hpp"
 #include "fru_identifier.hpp"
+#include "utils.hpp"
 
 #include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/async/context.hpp>
@@ -12,8 +13,10 @@
 #include <sdbusplus/async/task.hpp>
 #include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/message.hpp>
+#include <xyz/openbmc_project/Common/Progress/common.hpp>
 #include <xyz/openbmc_project/ObjectMapper/client.hpp>
 
+#include <cstdint>
 #include <exception>
 #include <map>
 #include <memory>
@@ -28,14 +31,49 @@ namespace concurrent_maintenance
 using ObjectMapper = sdbusplus::client::xyz::openbmc_project::ObjectMapper<>;
 
 constexpr auto readyToRemoveProperty = "ReadyToRemove";
+constexpr auto cmParentObjectPath = "/com/ibm/ConcurrentMaintenance";
 constexpr auto cmRemoveObjectPath = "/com/ibm/ConcurrentMaintenance/remove";
 constexpr auto cmAddObjectPath = "/com/ibm/ConcurrentMaintenance/add";
 
 Manager::Manager(sdbusplus::async::context& ctx) :
-    ctx(ctx), currentCMObject(nullptr)
+    ManagerIface(ctx, cmParentObjectPath), ctx(ctx), currentCMObject(nullptr)
 {
     lg2::info("Concurrent Maintenance manager initialized");
+
+    /* start_time is 0 until the remove phase begins (no current time stamp). */
+    this->start_time(0);
+    this->status(OperationStatus::NotStarted);
+    this->emit_added();
+}
+
+void Manager::start()
+{
     ctx.spawn(watchReadyToRemove());
+}
+
+void Manager::updateStatus(OperationStatus newStatus, uint64_t completedTime)
+{
+    if (newStatus == OperationStatus::NotStarted)
+    {
+        /* Back to idle: clear both timestamps */
+        this->start_time(0);
+        this->completed_time(0);
+    }
+    else if (newStatus == OperationStatus::InProgress)
+    {
+        /* Stamp start_time when the remove phase begins. */
+        this->start_time(currentTimeMicroseconds());
+    }
+    else if (newStatus == OperationStatus::Completed ||
+             newStatus == OperationStatus::Failed ||
+             newStatus == OperationStatus::Aborted)
+    {
+        this->completed_time(completedTime);
+    }
+
+    this->status(newStatus);
+    lg2::info("CM parent object status at {PATH} updated to {STATUS}", "PATH",
+              cmParentObjectPath, "STATUS", convertForMessage(newStatus));
 }
 
 sdbusplus::async::task<> Manager::watchReadyToRemove()
@@ -136,15 +174,55 @@ sdbusplus::async::task<> Manager::processCMRequest(bool readyToRemove,
 
     currentCMObject = std::make_unique<CMObject>(ctx, cmPath, fruPath);
 
+    /* Drive the parent Progress transitions. */
+    if (readyToRemove)
+    {
+        /* Remove operation is starting */
+        updateStatus(OperationStatus::InProgress);
+    }
+
     try
     {
         co_await currentCMObject->execute(readyToRemove, *ops);
-        lg2::info("CM operation completed for {PATH}", "PATH", fruPath);
+
+        /* execute() swallows handler failures and records them on the CM
+         * object, so derive the parent state from the object's status. The
+         * object's completed_time is reused so both report the same instant. */
+        const auto cmStatus = currentCMObject->getStatus();
+        const auto cmCompletedTime = currentCMObject->getCompletedTime();
+
+        if (cmStatus == OperationStatus::Failed)
+        {
+            lg2::error("CM operation failed for {PATH}", "PATH", fruPath);
+            updateStatus(OperationStatus::Failed, cmCompletedTime);
+        }
+        else
+        {
+            lg2::info("CM operation completed for {PATH}", "PATH", fruPath);
+
+            /* Add finished successfully: the parent progress is done. */
+            if (!readyToRemove)
+            {
+                updateStatus(OperationStatus::Completed, cmCompletedTime);
+            }
+        }
     }
     catch (const std::exception& e)
     {
         lg2::error("CM operation failed for {PATH}: {ERROR}", "PATH", fruPath,
                    "ERROR", e);
+
+        /* Unexpected error outside the object's own handling; there is no
+         * object timestamp to reuse, so stamp the current time. */
+        updateStatus(OperationStatus::Failed, currentTimeMicroseconds());
+    }
+
+    /* The add completed successfully, so the remove/add cycle is over: return
+     * the parent to NotStarted and clear its start/completed times. A failed
+     * add is left as Failed so the failure stays visible. */
+    if (!readyToRemove && getStatus() == OperationStatus::Completed)
+    {
+        updateStatus(OperationStatus::NotStarted);
     }
 
     currentCMObject.reset();
