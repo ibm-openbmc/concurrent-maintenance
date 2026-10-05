@@ -3,6 +3,7 @@ gtest_dep = dependency('gtest', main: true, required: get_option('tests'))
 test_sources = [
     '../src/manager.cpp',
     '../src/cm_object.cpp',
+    '../src/cm_parent_object.cpp',
     '../src/fru_identifier.cpp',
 ]
 

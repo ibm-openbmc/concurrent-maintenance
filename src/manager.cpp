@@ -4,6 +4,7 @@
 #include "manager.hpp"
 
 #include "cm_object.hpp"
+#include "cm_parent_object.hpp"
 #include "fru_identifier.hpp"
 
 #include <phosphor-logging/lg2.hpp>
@@ -23,11 +24,12 @@ namespace concurrent_maintenance
 using ObjectMapper = sdbusplus::client::xyz::openbmc_project::ObjectMapper<>;
 
 constexpr auto readyToRemoveProperty = "ReadyToRemove";
+constexpr auto cmParentObjectPath = "/com/ibm/ConcurrentMaintenance";
 constexpr auto cmRemoveObjectPath = "/com/ibm/ConcurrentMaintenance/remove";
 constexpr auto cmAddObjectPath = "/com/ibm/ConcurrentMaintenance/add";
 
 Manager::Manager(sdbusplus::async::context& ctx) :
-    ctx(ctx), currentCMObject(nullptr)
+    ctx(ctx), parentObject(ctx, cmParentObjectPath), currentCMObject(nullptr)
 {
     lg2::info("Concurrent Maintenance manager initialized");
     ctx.spawn(watchReadyToRemove());
@@ -133,15 +135,31 @@ sdbusplus::async::task<> Manager::processCMRequest(bool readyToRemove,
 
     currentCMObject = std::make_unique<CMObject>(ctx, cmPath, fruPath);
 
+    /* Drive the parent Progress transitions. */
+    if (readyToRemove)
+    {
+        /* Remove operation is starting */
+        parentObject.updateStatus(OperationStatus::InProgress);
+    }
+
     try
     {
         co_await currentCMObject->execute(readyToRemove, *ops);
         lg2::info("CM operation completed for {PATH}", "PATH", fruPath);
+
+        /* Add operation finished successfully, update the parent progress done. */
+        if (!readyToRemove)
+        {
+            parentObject.updateStatus(OperationStatus::Completed);
+        }
     }
     catch (const std::exception& e)
     {
         lg2::error("CM operation failed for {PATH}: {ERROR}", "PATH", fruPath,
                    "ERROR", e);
+
+        /* Either phase failed, update the parent progress as failed. */
+        parentObject.updateStatus(OperationStatus::Failed);
     }
 
     /* Keep currentCMObject on D-Bus until the next event arrives */
