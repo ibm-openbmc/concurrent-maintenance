@@ -15,30 +15,14 @@
 namespace concurrent_maintenance
 {
 
-inline sdbusplus::async::task<>
-    fsiCardRemove(std::reference_wrapper<sdbusplus::async::context> /*ctx*/,
+sdbusplus::async::task<>
+    fsiCardRemove(std::reference_wrapper<sdbusplus::async::context> ctx,
                   std::string fruPath,
-                  std::reference_wrapper<CMObject> /*cmObj*/)
-{
-    lg2::info("FSI remove: killing FSI links for {PATH}", "PATH", fruPath);
+                  std::reference_wrapper<CMObject> /*cmObj*/);
 
-    lg2::info("FSI remove: deleting VPD for {PATH}", "PATH", fruPath);
-
-    lg2::info("FSI remove: sequence complete for {PATH}", "PATH", fruPath);
-    co_return;
-}
-
-inline sdbusplus::async::task<>
-    fsiCardAdd(std::reference_wrapper<sdbusplus::async::context> /*ctx*/,
-               std::string fruPath, std::reference_wrapper<CMObject> /*cmObj*/)
-{
-    lg2::info("FSI add: enabling FSI links for {PATH}", "PATH", fruPath);
-
-    lg2::info("FSI add: collecting VPD for {PATH}", "PATH", fruPath);
-
-    lg2::info("FSI add: sequence complete for {PATH}", "PATH", fruPath);
-    co_return;
-}
+sdbusplus::async::task<>
+    fsiCardAdd(std::reference_wrapper<sdbusplus::async::context> ctx,
+               std::string fruPath, std::reference_wrapper<CMObject> /*cmObj*/);
 
 inline sdbusplus::async::task<>
     bmcRemove(std::reference_wrapper<sdbusplus::async::context> /*ctx*/,

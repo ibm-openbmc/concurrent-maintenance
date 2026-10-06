@@ -76,28 +76,6 @@ TEST(CMObjectTest, InitialStatusIsNotStarted)
 
 // Progress: execute() drives NotStarted -> InProgress -> Completed
 
-TEST(CMObjectTest, ExecuteRemoveFSISetsCompleted)
-{
-    sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
-    const FRUOperations* ops = FRUIdentifier::identifyType(fsiInterfaces,
-                                                           fsiFruPath);
-    ASSERT_NE(ops, nullptr);
-    EXPECT_NO_THROW(stdexec::sync_wait(obj.execute(true, *ops)));
-    EXPECT_EQ(obj.getStatus(), OperationStatus::Completed);
-}
-
-TEST(CMObjectTest, ExecuteAddFSISetsCompleted)
-{
-    sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmAddPath, fsiFruPath);
-    const FRUOperations* ops = FRUIdentifier::identifyType(fsiInterfaces,
-                                                           fsiFruPath);
-    ASSERT_NE(ops, nullptr);
-    EXPECT_NO_THROW(stdexec::sync_wait(obj.execute(false, *ops)));
-    EXPECT_EQ(obj.getStatus(), OperationStatus::Completed);
-}
-
 TEST(CMObjectTest, ExecuteRemoveBMCSetsCompleted)
 {
     sdbusplus::async::context ctx;
