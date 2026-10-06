@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright IBM Corp.
 
 #include "cm_object.hpp"
+#include "cm_parent_object.hpp"
 #include "fru_identifier.hpp"
 
 #include <sdbusplus/async/context.hpp>
@@ -165,6 +166,71 @@ TEST(CMObjectTest, IdentifyTypeUnknownFRUReturnsNull)
     const FRUOperations* ops = FRUIdentifier::identifyType(unknownInterfaces,
                                                            unknownFruPath);
     EXPECT_EQ(ops, nullptr);
+}
+
+// CMParentObject: initial status is NotStarted
+
+TEST(CMParentObjectTest, InitialStatusIsNotStarted)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+    EXPECT_EQ(parent.getStatus(), OperationStatus::NotStarted);
+}
+
+// CMParentObject: updateStatus transitions
+
+TEST(CMParentObjectTest, UpdateStatusToInProgress)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+    parent.updateStatus(OperationStatus::InProgress);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::InProgress);
+}
+
+TEST(CMParentObjectTest, UpdateStatusToCompleted)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+    parent.updateStatus(OperationStatus::InProgress);
+    parent.updateStatus(OperationStatus::Completed);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::Completed);
+}
+
+TEST(CMParentObjectTest, UpdateStatusToFailed)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+    parent.updateStatus(OperationStatus::InProgress);
+    parent.updateStatus(OperationStatus::Failed);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::Failed);
+}
+
+// CMParentObject: full remove->add cycle drives Completed
+
+TEST(CMParentObjectTest, RemoveStartsInProgressAddCompletesCompleted)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+
+    /* Simulate remove starting */
+    parent.updateStatus(OperationStatus::InProgress);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::InProgress);
+
+    /* Simulate add finishing successfully */
+    parent.updateStatus(OperationStatus::Completed);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::Completed);
+}
+
+// CMParentObject: failed remove drives Failed
+
+TEST(CMParentObjectTest, RemoveFailureDrivesParentToFailed)
+{
+    sdbusplus::async::context ctx;
+    CMParentObject parent(ctx, "/com/ibm/ConcurrentMaintenance");
+
+    parent.updateStatus(OperationStatus::InProgress);
+    parent.updateStatus(OperationStatus::Failed);
+    EXPECT_EQ(parent.getStatus(), OperationStatus::Failed);
 }
 
 } // namespace concurrent_maintenance
