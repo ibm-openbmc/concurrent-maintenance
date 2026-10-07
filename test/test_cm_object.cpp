@@ -54,14 +54,14 @@ static const std::vector<std::string> unknownInterfaces = {
 TEST(CMObjectTest, RemovePathIsCorrect)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
+    CMObject obj(ctx, cmRemovePath, fsiFruPath, []() {});
     EXPECT_EQ(obj.getPath(), cmRemovePath);
 }
 
 TEST(CMObjectTest, AddPathIsCorrect)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmAddPath, fsiFruPath);
+    CMObject obj(ctx, cmAddPath, fsiFruPath, []() {});
     EXPECT_EQ(obj.getPath(), cmAddPath);
 }
 
@@ -70,7 +70,7 @@ TEST(CMObjectTest, AddPathIsCorrect)
 TEST(CMObjectTest, InitialStatusIsNotStarted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
+    CMObject obj(ctx, cmRemovePath, fsiFruPath, []() {});
     EXPECT_EQ(obj.getStatus(), OperationStatus::NotStarted);
 }
 
@@ -79,7 +79,7 @@ TEST(CMObjectTest, InitialStatusIsNotStarted)
 TEST(CMObjectTest, ExecuteRemoveFSISetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
+    CMObject obj(ctx, cmRemovePath, fsiFruPath, []() {});
     const FRUOperations* ops = FRUIdentifier::identifyType(fsiInterfaces,
                                                            fsiFruPath);
     ASSERT_NE(ops, nullptr);
@@ -90,7 +90,7 @@ TEST(CMObjectTest, ExecuteRemoveFSISetsCompleted)
 TEST(CMObjectTest, ExecuteAddFSISetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmAddPath, fsiFruPath);
+    CMObject obj(ctx, cmAddPath, fsiFruPath, []() {});
     const FRUOperations* ops = FRUIdentifier::identifyType(fsiInterfaces,
                                                            fsiFruPath);
     ASSERT_NE(ops, nullptr);
@@ -101,7 +101,7 @@ TEST(CMObjectTest, ExecuteAddFSISetsCompleted)
 TEST(CMObjectTest, ExecuteRemoveBMCSetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, bmcFruPath);
+    CMObject obj(ctx, cmRemovePath, bmcFruPath, []() {});
     const FRUOperations* ops = FRUIdentifier::identifyType(bmcInterfaces,
                                                            bmcFruPath);
     ASSERT_NE(ops, nullptr);
@@ -112,7 +112,7 @@ TEST(CMObjectTest, ExecuteRemoveBMCSetsCompleted)
 TEST(CMObjectTest, ExecuteAddBMCSetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmAddPath, bmcFruPath);
+    CMObject obj(ctx, cmAddPath, bmcFruPath, []() {});
     const FRUOperations* ops = FRUIdentifier::identifyType(bmcInterfaces,
                                                            bmcFruPath);
     ASSERT_NE(ops, nullptr);
@@ -123,7 +123,7 @@ TEST(CMObjectTest, ExecuteAddBMCSetsCompleted)
 TEST(CMObjectTest, ExecuteRemoveSwitchboardSetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, switchboardFruPath);
+    CMObject obj(ctx, cmRemovePath, switchboardFruPath, []() {});
     const FRUOperations* ops =
         FRUIdentifier::identifyType(switchboardInterfaces, switchboardFruPath);
     ASSERT_NE(ops, nullptr);
@@ -134,7 +134,7 @@ TEST(CMObjectTest, ExecuteRemoveSwitchboardSetsCompleted)
 TEST(CMObjectTest, ExecuteAddSwitchboardSetsCompleted)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmAddPath, switchboardFruPath);
+    CMObject obj(ctx, cmAddPath, switchboardFruPath, []() {});
     const FRUOperations* ops =
         FRUIdentifier::identifyType(switchboardInterfaces, switchboardFruPath);
     ASSERT_NE(ops, nullptr);
@@ -147,7 +147,7 @@ TEST(CMObjectTest, ExecuteAddSwitchboardSetsCompleted)
 TEST(CMObjectTest, UpdateStatusToInProgress)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
+    CMObject obj(ctx, cmRemovePath, fsiFruPath, []() {});
     obj.updateStatus(OperationStatus::InProgress);
     EXPECT_EQ(obj.getStatus(), OperationStatus::InProgress);
 }
@@ -155,7 +155,7 @@ TEST(CMObjectTest, UpdateStatusToInProgress)
 TEST(CMObjectTest, UpdateStatusToFailed)
 {
     sdbusplus::async::context ctx;
-    CMObject obj(ctx, cmRemovePath, fsiFruPath);
+    CMObject obj(ctx, cmRemovePath, fsiFruPath, []() {});
     obj.updateStatus(OperationStatus::Failed);
     EXPECT_EQ(obj.getStatus(), OperationStatus::Failed);
 }

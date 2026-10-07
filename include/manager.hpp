@@ -59,6 +59,8 @@ class Manager
      * @param readyToRemove  true for removal, false for addition.
      * @param fruPath        Inventory D-Bus path of the FRU.
      */
+    sdbusplus::async::task<> deleteCMObject();
+
     sdbusplus::async::task<> processCMRequest(bool readyToRemove,
                                               std::string fruPath);
 };

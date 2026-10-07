@@ -15,15 +15,18 @@
 #include <exception>
 #include <functional>
 #include <string>
+#include <utility>
 
 namespace concurrent_maintenance
 {
 
 CMObject::CMObject(sdbusplus::async::context& ctx,
-                   const std::string& objectPath, const std::string& fruPath) :
+                   const std::string& objectPath, const std::string& fruPath,
+                   std::function<void()> onOperationComplete) :
     sdbusplus::async::server_t<CMObject, AssocDefsAServer, ProgressAServer>(
         ctx, objectPath.c_str()),
-    ctx(ctx), objectPath(objectPath), fruPath(fruPath)
+    ctx(ctx), objectPath(objectPath), fruPath(fruPath),
+    onOperationComplete(std::move(onOperationComplete))
 {
     /* Association:
      * "maintenance_for"  — from the CM object, the endpoint is an inventory
@@ -81,6 +84,7 @@ void CMObject::updateStatus(OperationStatus status)
         status == OperationStatus::Failed || status == OperationStatus::Aborted)
     {
         this->completed_time(currentTimeMicroseconds());
+        onOperationComplete();
     }
 
     this->status(status);

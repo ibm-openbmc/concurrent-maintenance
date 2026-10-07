@@ -14,7 +14,6 @@
 
 #include <functional>
 #include <string>
-
 namespace concurrent_maintenance
 {
 
@@ -58,7 +57,8 @@ class CMObject :
 {
   public:
     CMObject(sdbusplus::async::context& ctx, const std::string& objectPath,
-             const std::string& fruPath);
+             const std::string& fruPath,
+             std::function<void()> onOperationComplete);
 
     CMObject(const CMObject&) = delete;
     CMObject& operator=(const CMObject&) = delete;
@@ -112,6 +112,7 @@ class CMObject :
     sdbusplus::async::context& ctx;
     const std::string objectPath;
     const std::string fruPath;
+    std::function<void()> onOperationComplete;
 };
 
 } // namespace concurrent_maintenance
