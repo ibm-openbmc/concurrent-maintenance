@@ -134,8 +134,6 @@ sdbusplus::async::task<> Manager::processCMRequest(bool readyToRemove,
     const std::string cmPath = readyToRemove ? cmRemoveObjectPath
                                              : cmAddObjectPath;
 
-    currentCMObject.reset();
-
     currentCMObject = std::make_unique<CMObject>(ctx, cmPath, fruPath);
 
     try
@@ -149,7 +147,7 @@ sdbusplus::async::task<> Manager::processCMRequest(bool readyToRemove,
                    "ERROR", e);
     }
 
-    /* Keep currentCMObject on D-Bus until the next event arrives */
+    currentCMObject.reset();
 }
 
 } // namespace concurrent_maintenance
