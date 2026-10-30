@@ -12,6 +12,7 @@
 #include <xyz/openbmc_project/Common/Progress/aserver.hpp>
 #include <xyz/openbmc_project/Common/Progress/common.hpp>
 
+#include <cstdint>
 #include <functional>
 #include <string>
 
@@ -106,6 +107,12 @@ class CMObject :
     OperationStatus getStatus() const
     {
         return this->status();
+    }
+
+    /** @brief Return the Progress completed_time in microseconds. */
+    uint64_t getCompletedTime() const
+    {
+        return this->completed_time();
     }
 
   private:

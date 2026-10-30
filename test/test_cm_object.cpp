@@ -3,6 +3,7 @@
 
 #include "cm_object.hpp"
 #include "fru_identifier.hpp"
+#include "manager.hpp"
 
 #include <sdbusplus/async/context.hpp>
 #include <sdbusplus/async/stdexec/__detail/__sync_wait.hpp>
@@ -165,6 +166,97 @@ TEST(CMObjectTest, IdentifyTypeUnknownFRUReturnsNull)
     const FRUOperations* ops = FRUIdentifier::identifyType(unknownInterfaces,
                                                            unknownFruPath);
     EXPECT_EQ(ops, nullptr);
+}
+
+// Manager (parent Progress): initial status is NotStarted
+
+TEST(ManagerProgressTest, InitialStatusIsNotStarted)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::NotStarted);
+}
+
+// Manager (parent Progress): updateStatus transitions
+
+TEST(ManagerProgressTest, UpdateStatusToInProgress)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+    manager.updateStatus(OperationStatus::InProgress);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::InProgress);
+}
+
+TEST(ManagerProgressTest, UpdateStatusToCompleted)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+    manager.updateStatus(OperationStatus::InProgress);
+    manager.updateStatus(OperationStatus::Completed, 1234);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::Completed);
+}
+
+TEST(ManagerProgressTest, UpdateStatusToFailed)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+    manager.updateStatus(OperationStatus::InProgress);
+    manager.updateStatus(OperationStatus::Failed, 1234);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::Failed);
+}
+
+// Manager (parent Progress): full remove->add cycle drives Completed
+
+TEST(ManagerProgressTest, RemoveStartsInProgressAddCompletesCompleted)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+
+    /* Simulate remove starting */
+    manager.updateStatus(OperationStatus::InProgress);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::InProgress);
+
+    /* Simulate add finishing successfully, reusing the add object's time */
+    CMObject addObj(ctx, cmAddPath, fsiFruPath);
+    const FRUOperations* ops = FRUIdentifier::identifyType(fsiInterfaces,
+                                                           fsiFruPath);
+    ASSERT_NE(ops, nullptr);
+    stdexec::sync_wait(addObj.execute(false, *ops));
+
+    manager.updateStatus(OperationStatus::Completed, addObj.getCompletedTime());
+    EXPECT_EQ(manager.getStatus(), OperationStatus::Completed);
+    EXPECT_NE(addObj.getCompletedTime(), 0U);
+    EXPECT_EQ(manager.getCompletedTime(), addObj.getCompletedTime());
+}
+
+// Manager (parent Progress): NotStarted clears start/completed times
+
+TEST(ManagerProgressTest, NotStartedResetsTimes)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+
+    manager.updateStatus(OperationStatus::InProgress);
+    manager.updateStatus(OperationStatus::Completed, 1234);
+    EXPECT_EQ(manager.getCompletedTime(), 1234U);
+
+    manager.updateStatus(OperationStatus::NotStarted);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::NotStarted);
+    EXPECT_EQ(manager.getStartTime(), 0U);
+    EXPECT_EQ(manager.getCompletedTime(), 0U);
+}
+
+// Manager (parent Progress): failed remove drives Failed
+
+TEST(ManagerProgressTest, RemoveFailureDrivesParentToFailed)
+{
+    sdbusplus::async::context ctx;
+    Manager manager(ctx);
+
+    manager.updateStatus(OperationStatus::InProgress);
+    manager.updateStatus(OperationStatus::Failed, 1234);
+    EXPECT_EQ(manager.getStatus(), OperationStatus::Failed);
+    EXPECT_EQ(manager.getCompletedTime(), 1234U);
 }
 
 } // namespace concurrent_maintenance

@@ -19,6 +19,7 @@ try
     sdbusplus::server::manager_t dbusObjManager(ctx.get_bus(), objManagerPath);
 
     concurrent_maintenance::Manager cmManager(ctx);
+    cmManager.start();
 
     ctx.request_name("com.ibm.ConcurrentMaintenance");
 
