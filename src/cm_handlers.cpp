@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 namespace concurrent_maintenance
 {
 
