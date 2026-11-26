@@ -3,8 +3,12 @@
 
 #pragma once
 
+#include <sdbusplus/async/context.hpp>
+#include <sdbusplus/async/task.hpp>
+
 #include <chrono>
 #include <cstdint>
+#include <functional>
 
 namespace concurrent_maintenance
 {
@@ -18,5 +22,19 @@ inline uint64_t currentTimeMicroseconds()
             std::chrono::system_clock::now().time_since_epoch())
             .count());
 }
+
+/**
+ * @brief Check whether the host is running using the BootProgress property.
+ *
+ * The host is considered running once BootProgress is SystemInitComplete
+ * or OSRunning. Any earlier stage (including Unspecified) is not
+ * running. Returns false if BootProgress cannot be read.
+ *
+ * @param ctx  Reference wrapper to the async D-Bus context (never null).
+ *             Must outlive the task.
+ * @return true if the host is running, false otherwise.
+ */
+sdbusplus::async::task<bool>
+    isHostRunning(std::reference_wrapper<sdbusplus::async::context> ctx);
 
 } // namespace concurrent_maintenance

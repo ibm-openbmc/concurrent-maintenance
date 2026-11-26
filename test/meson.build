@@ -4,6 +4,7 @@ test_sources = [
     '../src/manager.cpp',
     '../src/cm_object.cpp',
     '../src/fru_identifier.cpp',
+    '../src/utils.cpp',
     '../src/cm_handlers.cpp',
 ]
 
